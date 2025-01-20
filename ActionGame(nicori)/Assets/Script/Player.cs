@@ -19,12 +19,14 @@ public class Player : MonoBehaviour
 
     private Vector2 _inputDirection;
     private Rigidbody2D rigid;
+    private Animator anim;
     private bool bJump;
 
     // Start is called before the first frame update
     void Start()
     {
         rigid = GetComponent<Rigidbody2D>();
+        anim  = GetComponent<Animator>();
         bJump = false;
     }
 
@@ -37,6 +39,7 @@ public class Player : MonoBehaviour
     private void Move()
     {
         rigid.velocity = new Vector2(_inputDirection.x * moveSpeed, rigid.velocity.y);
+        anim.SetBool("Walk", _inputDirection.x != 0.0f);
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -67,6 +70,14 @@ public class Player : MonoBehaviour
         }
     }
 
+    private void Dead()
+    {
+        if(hp <= 0)
+        {
+            Destroy(gameObject);
+        }
+    }
+
     public void OnMove(InputAction.CallbackContext context)
     {
         _inputDirection = context.ReadValue<Vector2>();
@@ -84,5 +95,11 @@ public class Player : MonoBehaviour
     public void Damage(int damage)
     {
         hp = Mathf.Max(hp - damage, 0);
+        Dead();
+    }
+
+    public int GetHP()
+    {
+        return hp;
     }
 }
