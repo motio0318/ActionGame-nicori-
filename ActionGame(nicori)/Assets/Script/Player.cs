@@ -10,16 +10,20 @@ public class Player : MonoBehaviour
 
     [SerializeField, Header("移動速度")]
     private float moveSpeed;
-
     [SerializeField, Header("ジャンプ速度")]
     private float jumpSpeed;
-
     [SerializeField, Header("体力")]
     private int hp;
+    [SerializeReference, Header("無敵時間")]
+    private float damageTime;
+    [SerializeReference, Header("点滅時間")]
+    private float flashTime;
+
 
     private Vector2 _inputDirection;
     private Rigidbody2D rigid;
     private Animator anim;
+    private SpriteRenderer spriteRenderer;
     private bool bJump;
 
     // Start is called before the first frame update
@@ -27,6 +31,7 @@ public class Player : MonoBehaviour
     {
         rigid = GetComponent<Rigidbody2D>();
         anim  = GetComponent<Animator>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
         bJump = false;
     }
 
@@ -34,7 +39,7 @@ public class Player : MonoBehaviour
     void Update()
     {
         Move();
-        Debug.Log(hp);
+        LookMoveDirec();
     }
     private void Move()
     {
@@ -42,16 +47,30 @@ public class Player : MonoBehaviour
         anim.SetBool("Walk", _inputDirection.x != 0.0f);
     }
 
+    private void LookMoveDirec()
+    {
+        if(_inputDirection.x > 0.0f)
+        {
+            transform.eulerAngles = Vector3.zero;
+        }
+        else if(_inputDirection.x < 0.0f)
+        {
+            transform.eulerAngles = new Vector3(0.0f, 180.0f, 0.0f);
+        }
+    }
+
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if(collision.gameObject.tag == "Floor")
         {
             bJump = false;
+            anim.SetBool("Jump", bJump);
         }
 
         if(collision.gameObject.tag == "Enemy")
         {
             HitEnemy(collision.gameObject);
+            gameObject.layer = LayerMask.NameToLayer("PlayerDamage");
         }
     }
 
@@ -67,7 +86,25 @@ public class Player : MonoBehaviour
         else
         {
             enemy.GetComponent<Enemy>().PlayerDamage(this);
+            StartCoroutine(Damage());
         }
+    }
+
+    IEnumerator Damage()
+    {
+        Color color = spriteRenderer.color;
+        for (int i = 0; i < damageTime; i++)
+        {
+            yield return new WaitForSeconds(flashTime);
+            spriteRenderer.color = new Color(color.r, color.g, color.b, 0.0f);
+
+            yield return new WaitForSeconds(flashTime);
+            spriteRenderer.color = new Color(color.r, color.g, color.b, 1.0f);
+
+        }
+
+        spriteRenderer.color = color;
+        gameObject.layer = LayerMask.NameToLayer("Default");
     }
 
     private void Dead()
@@ -90,6 +127,7 @@ public class Player : MonoBehaviour
 
         rigid.AddForce(Vector2.up * jumpSpeed, ForceMode2D.Impulse);
         bJump = true;
+        anim.SetBool("Jump", bJump);
     }
 
     public void Damage(int damage)
