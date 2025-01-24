@@ -40,9 +40,12 @@ public class Player : MonoBehaviour
     {
         Move();
         LookMoveDirec();
+        HitFloor();
     }
+
     private void Move()
     {
+        if (bJump) return;
         rigid.velocity = new Vector2(_inputDirection.x * moveSpeed, rigid.velocity.y);
         anim.SetBool("Walk", _inputDirection.x != 0.0f);
     }
@@ -61,16 +64,35 @@ public class Player : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if(collision.gameObject.tag == "Floor")
-        {
-            bJump = false;
-            anim.SetBool("Jump", bJump);
-        }
 
         if(collision.gameObject.tag == "Enemy")
         {
             HitEnemy(collision.gameObject);
-            gameObject.layer = LayerMask.NameToLayer("PlayerDamage");
+        }
+        else if(collision.gameObject.tag == "Goal")
+        {
+            FindObjectOfType<MainManager>().ShowGameClearUI();
+            enabled = false;
+            GetComponent<PlayerInput>().enabled = false;
+        }
+    }
+
+    private void HitFloor()
+    {
+        int layerMask = LayerMask.GetMask("Floor");
+        Vector3 rayPos = transform.position - new Vector3(0.0f, transform.lossyScale.y / 2.0f);
+        Vector3 raySize = new Vector3(transform.lossyScale.x - 0.1f, 0.1f);
+        RaycastHit2D rayHit = Physics2D.BoxCast(rayPos, raySize, 0.0f, Vector2.zero, 0.0f, layerMask);
+        if(rayHit.transform == null)
+        {
+            bJump = true;
+            anim.SetBool("Jump", bJump);
+            return;
+        }
+        if(rayHit.transform.tag == "Floor" && bJump)
+        {
+            bJump = false;
+            anim.SetBool("Jump", bJump);
         }
     }
 
@@ -86,6 +108,7 @@ public class Player : MonoBehaviour
         else
         {
             enemy.GetComponent<Enemy>().PlayerDamage(this);
+            gameObject.layer = LayerMask.NameToLayer("PlayerDamage");
             StartCoroutine(Damage());
         }
     }
@@ -97,7 +120,6 @@ public class Player : MonoBehaviour
         {
             yield return new WaitForSeconds(flashTime);
             spriteRenderer.color = new Color(color.r, color.g, color.b, 0.0f);
-
             yield return new WaitForSeconds(flashTime);
             spriteRenderer.color = new Color(color.r, color.g, color.b, 1.0f);
 
@@ -126,8 +148,8 @@ public class Player : MonoBehaviour
         if (!context.performed || bJump) return;
 
         rigid.AddForce(Vector2.up * jumpSpeed, ForceMode2D.Impulse);
-        bJump = true;
-        anim.SetBool("Jump", bJump);
+        //bJump = true;
+        //anim.SetBool("Jump", bJump);
     }
 
     public void Damage(int damage)
