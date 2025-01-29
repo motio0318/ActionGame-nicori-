@@ -137,6 +137,15 @@ public class Player : MonoBehaviour
         }
     }
 
+    private void OnBecameInvisible()
+    {
+        Camera camera = Camera.main;
+        if(camera.name == "Main Camera" && camera.transform.position.y > transform.position.y)
+        {
+            Destroy(gameObject);
+        }
+    }
+
     public void OnMove(InputAction.CallbackContext context)
     {
         _inputDirection = context.ReadValue<Vector2>();
