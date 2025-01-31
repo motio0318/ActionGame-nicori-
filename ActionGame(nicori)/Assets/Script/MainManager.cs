@@ -11,6 +11,14 @@ public class MainManager : MonoBehaviour
     private GameObject gameOverUI;
     [SerializeField, Header("ゲームクリア")]
     private GameObject gameClearUI;
+    [SerializeField, Header("BGM")]
+    private AudioSource bgm;
+    [SerializeField, Header("決定音")]
+    private GameObject submitSE;
+    [SerializeField, Header("ゲームクリアSE")]
+    private GameObject gameClearSE;
+    [SerializeField, Header("ゲームオーバーSE")]
+    private GameObject gameOverSE;
 
     private GameObject player;
     private bool bShowUI;
@@ -20,7 +28,9 @@ public class MainManager : MonoBehaviour
     {
         player = FindObjectOfType<Player>().gameObject;
         bShowUI = false;
-        FindObjectOfType<Player>().enabled = false;
+        FindObjectOfType<Fade>().FadeStart(MainStart);
+        player.GetComponent<Player>().enabled = false;
+        player.GetComponent<PlayerInput>().enabled = false;
         foreach(EnemySpawner enemySpawner in FindObjectsOfType<EnemySpawner>())
         {
             enemySpawner.enabled = false;
@@ -30,6 +40,7 @@ public class MainManager : MonoBehaviour
     private void MainStart()
     {
         player.GetComponent<Player>().enabled = true;
+        player.GetComponent<PlayerInput>().enabled = true;
         foreach(EnemySpawner enemySpawner in FindObjectsOfType<EnemySpawner>())
         {
             enemySpawner.enabled = true;
@@ -45,21 +56,35 @@ public class MainManager : MonoBehaviour
 
     private void ShowGameOverUI()
     {
-        if (player != null) return;
+        if (player != null || gameOverUI.activeSelf) return;
+
         gameOverUI.SetActive(true);
         bShowUI = true;
+        bgm.Stop();
+        Instantiate(gameOverSE);
     }
 
     public void ShowGameClearUI()
     {
+        if (gameClearUI.activeSelf) return;
+
         gameClearUI.SetActive(true);
         bShowUI = true;
+        bgm.Stop();
+        Instantiate(gameClearSE);
     }
 
     public void OnRestart(InputAction.CallbackContext context)
     {
         if (!bShowUI || !context.performed) return;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        Instantiate(submitSE);
 
+    }
+
+    public void OnEscape(InputAction.CallbackContext context)
+    {
+        if (!context.performed) return;
+        Application.Quit();
     }
 }

@@ -6,6 +6,9 @@ using UnityEngine.SceneManagement;
 
 public class TitleManager : MonoBehaviour
 {
+    [SerializeField, Header("Œˆ’è‰¹")]
+    private GameObject SubmitSE;
+
     private bool bStart;
     private Fade fade;
 
@@ -38,6 +41,13 @@ public class TitleManager : MonoBehaviour
         {
             fade.FadeStart(ChangeScene);
             bStart = false;
+            Instantiate(SubmitSE);
         }
+    }
+
+    public void OnEscape(InputAction.CallbackContext context)
+    {
+        if (context.performed) return;
+        Application.Quit();
     }
 }

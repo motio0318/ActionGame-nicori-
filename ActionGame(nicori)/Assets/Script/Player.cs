@@ -18,6 +18,10 @@ public class Player : MonoBehaviour
     private float damageTime;
     [SerializeReference, Header("点滅時間")]
     private float flashTime;
+    [SerializeField, Header("ジャンプSE")]
+    private GameObject jumpSE;
+    [SerializeField, Header("ダメージSE")]
+    private GameObject damageSE;
 
 
     private Vector2 _inputDirection;
@@ -104,6 +108,7 @@ public class Player : MonoBehaviour
         {
             Destroy(enemy);
             rigid.AddForce(Vector2.up * jumpSpeed, ForceMode2D.Impulse);
+            Instantiate(jumpSE);
         }
         else
         {
@@ -157,6 +162,7 @@ public class Player : MonoBehaviour
         if (!context.performed || bJump) return;
 
         rigid.AddForce(Vector2.up * jumpSpeed, ForceMode2D.Impulse);
+        Instantiate(jumpSE);
         //bJump = true;
         //anim.SetBool("Jump", bJump);
     }
@@ -164,6 +170,7 @@ public class Player : MonoBehaviour
     public void Damage(int damage)
     {
         hp = Mathf.Max(hp - damage, 0);
+        Instantiate(damageSE);
         Dead();
     }
 
